@@ -1,18 +1,20 @@
-name: BE3600-PR-Search
+name: BE3600-Global-Search
 
 on:
   workflow_dispatch:
 
 jobs:
-  search_pr:
+  global_search:
     runs-on: ubuntu-22.04
     steps:
-      - name: Search Pull Requests
+      - name: Search GitHub for Code/PRs
         run: |
-          echo "=== ИЩЕМ ОТКРЫТЫЕ ПРАВКИ ПО BE3600 В IMMORTALWRT ==="
-          # Используем GitHub CLI, чтобы найти PR по ключевым словам
-          gh pr list -R immortalwrt/immortalwrt -S "BE3600" --state all
-          gh pr list -R immortalwrt/immortalwrt -S "RD15" --state all
+          echo "=== ИЩЕМ УПОМИНАНИЯ В PULL REQUESTS (IMMORTALWRT) ==="
+          gh pr list -R immortalwrt/immortalwrt -S "BE3600" --state all || echo "PR не найдены"
+          
+          echo -e "\n=== ИЩЕМ УПОМИНАНИЯ В КОДЕ (ГЛОБАЛЬНО) ==="
+          # Ищем файлы конфигурации или DTS на всем гитхабе
+          gh search code "xiaomi_be3600" --limit 5 || echo "В коде ничего нет"
+          gh search code "DEVICE_xiaomi_rd15" --limit 5 || echo "В коде ничего нет"
         env:
           GH_TOKEN: ${{ github.token }}
-          
