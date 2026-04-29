@@ -1,4 +1,4 @@
-name: BE3600-Final-Build
+name: BE3600-Experimental-Build
 
 on:
   workflow_dispatch:
@@ -17,7 +17,8 @@ jobs:
 
       - name: Clone source
         run: |
-          git clone --depth 1 https://github.com/immortalwrt/immortalwrt.git source
+          # Пробуем форк, где поддержка BE3600 более вероятна
+          git clone --depth 1 https://github.com/VIK_AD/immortalwrt.git source || git clone --depth 1 https://github.com/immortalwrt/immortalwrt.git source
           cd source
           ./scripts/feeds update -a
           ./scripts/feeds install -a
@@ -25,25 +26,25 @@ jobs:
       - name: RECON (Разведка)
         run: |
           cd source
-          echo "=== Ищем Xiaomi BE3600 ==="
-          grep -R "be3600" target/linux/qualcommax/ || echo "Не найдено"
+          echo "Ищем упоминания Xiaomi BE3600..."
+          # Ищем по всем папкам без привязки к таргету
+          grep -Ril "be3600" target/linux/ | head -n 5 || echo "Опять не нашли"
 
       - name: Generate Config
         run: |
           cd source
-          echo "CONFIG_TARGET_qualcommax=y" > .config
-          echo "CONFIG_TARGET_qualcommax_ipq50xx=y" >> .config
-          echo "CONFIG_TARGET_qualcommax_ipq50xx_DEVICE_xiaomi_be3600=y" >> .config
+          # Пытаемся завести конфиг через автоподбор
+          printf 'CONFIG_TARGET_qualcommax=y\nCONFIG_TARGET_qualcommax_ipq50xx=y\nCONFIG_TARGET_qualcommax_ipq50xx_DEVICE_xiaomi_be3600=y' > .config
           make defconfig
 
-      - name: Build firmware
+      - name: Build
         run: |
           cd source
           make -j$(nproc) || make -j1 V=s
 
-      - name: Upload artifacts
+      - name: Upload
         uses: actions/upload-artifact@v4
         with:
-          name: Firmware-BE3600
+          name: Firmware-BE3600-Try2
           path: source/bin/targets/*/*/*
           
