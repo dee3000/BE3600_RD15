@@ -1,37 +1,18 @@
-name: BE3600-Deep-Audit
+name: BE3600-PR-Search
 
 on:
   workflow_dispatch:
 
 jobs:
-  audit:
+  search_pr:
     runs-on: ubuntu-22.04
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Clone source
+      - name: Search Pull Requests
         run: |
-          # Используем основной репозиторий, он гарантированно доступен
-          git clone --depth 1 https://github.com/immortalwrt/immortalwrt.git source
-
-      - name: Deep Search & Report
-        run: |
-          cd source
-          {
-            echo "=== ГЛУБОКИЙ ПОИСК: BE3600 / RD15 / XIAOMI ==="
-            # Ищем по всему дереву, вдруг оно в другом таргете
-            grep -RinE "be3600|rd15|xiaomi" target/linux/ 2>/dev/null || echo "Совпадений в таргетах не найдено"
-            
-            echo -e "\n=== ПОИСК В ТАБЛИЦЕ ПРОФИЛЕЙ ==="
-            find target/linux/ -name profiles.json -exec grep -lE "be3600|rd15|xiaomi" {} + || echo "В profiles.json пусто"
-            
-            echo -e "\n=== ДОСТУПНЫЕ XIAOMI В QUALCOMMAX ==="
-            grep -r "DEVICE_TITLE.*Xiaomi" target/linux/qualcommax/image/ 2>/dev/null || echo "Xiaomi не найдены"
-          } | tee ../audit-report.txt
-
-      - name: Upload Report
-        uses: actions/upload-artifact@v4
-        with:
-          name: BE3600-Audit-Report
-          path: audit-report.txt
+          echo "=== ИЩЕМ ОТКРЫТЫЕ ПРАВКИ ПО BE3600 В IMMORTALWRT ==="
+          # Используем GitHub CLI, чтобы найти PR по ключевым словам
+          gh pr list -R immortalwrt/immortalwrt -S "BE3600" --state all
+          gh pr list -R immortalwrt/immortalwrt -S "RD15" --state all
+        env:
+          GH_TOKEN: ${{ github.token }}
+          
