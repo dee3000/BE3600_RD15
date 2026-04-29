@@ -1,20 +1,28 @@
-name: BE3600-Ultra-Scanner
+name: BE3600-Source-Targeted-Check
 
 on:
   workflow_dispatch:
 
 jobs:
-  find_source:
+  check_sources:
     runs-on: ubuntu-22.04
     steps:
-      - name: Search Code Globally
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check Ais-S (Самый вероятный)
         run: |
-          echo "=== ИЩЕМ ВСЕ РЕПОЗИТОРИИ С ПОДДЕРЖКОЙ BE3600 ==="
-          # Ищем файлы, где упоминается модель, и выводим названия репозиториев
-          gh search code "xiaomi_be3600" --limit 10 --json repository,path --jq '.[] | "\(.repository.full_name) -> \(.path)"'
-          
-          echo -e "\n=== ИЩЕМ УПОМИНАНИЯ RD15 ==="
-          gh search code "rd15" --limit 10 --json repository,path --jq '.[] | "\(.repository.full_name) -> \(.path)"'
-        env:
-          GH_TOKEN: ${{ github.token }}
+          git clone --depth 1 https://github.com/Ais-S/immortalwrt.git source_ais || echo "Ais-S не доступен"
+          if [ -d "source_ais" ]; then
+            echo "=== Файлы в Ais-S ==="
+            find source_ais/target/linux/qualcommax/ -name "*be3600*"
+          fi
+
+      - name: Check VIK-AD (Тот самый)
+        run: |
+          git clone --depth 1 https://github.com/VIK-AD/immortalwrt.git source_vik || echo "VIK-AD не доступен"
+          if [ -d "source_vik" ]; then
+            echo "=== Файлы в VIK-AD ==="
+            find source_vik/target/linux/qualcommax/ -name "*be3600*"
+          fi
           
