@@ -1,20 +1,20 @@
-name: BE3600-Global-Search
+name: BE3600-Ultra-Scanner
 
 on:
   workflow_dispatch:
 
 jobs:
-  global_search:
+  find_source:
     runs-on: ubuntu-22.04
     steps:
-      - name: Search GitHub for Code/PRs
+      - name: Search Code Globally
         run: |
-          echo "=== ИЩЕМ УПОМИНАНИЯ В PULL REQUESTS (IMMORTALWRT) ==="
-          gh pr list -R immortalwrt/immortalwrt -S "BE3600" --state all || echo "PR не найдены"
+          echo "=== ИЩЕМ ВСЕ РЕПОЗИТОРИИ С ПОДДЕРЖКОЙ BE3600 ==="
+          # Ищем файлы, где упоминается модель, и выводим названия репозиториев
+          gh search code "xiaomi_be3600" --limit 10 --json repository,path --jq '.[] | "\(.repository.full_name) -> \(.path)"'
           
-          echo -e "\n=== ИЩЕМ УПОМИНАНИЯ В КОДЕ (ГЛОБАЛЬНО) ==="
-          # Ищем файлы конфигурации или DTS на всем гитхабе
-          gh search code "xiaomi_be3600" --limit 5 || echo "В коде ничего нет"
-          gh search code "DEVICE_xiaomi_rd15" --limit 5 || echo "В коде ничего нет"
+          echo -e "\n=== ИЩЕМ УПОМИНАНИЯ RD15 ==="
+          gh search code "rd15" --limit 10 --json repository,path --jq '.[] | "\(.repository.full_name) -> \(.path)"'
         env:
           GH_TOKEN: ${{ github.token }}
+          
