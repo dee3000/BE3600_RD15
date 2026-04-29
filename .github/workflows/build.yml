@@ -1,50 +1,40 @@
-name: BE3600-Experimental-Build
+name: BE3600-Deep-Audit
 
 on:
   workflow_dispatch:
 
 jobs:
-  build:
+  audit:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install dependencies
-        run: |
-          sudo apt update
-          sudo apt install -y build-essential clang flex bison g++ gawk gcc-multilib g++-multilib gettext git libncurses5-dev libssl-dev python3-distutils rsync unzip zlib1g-dev file wget
-
       - name: Clone source
         run: |
-          # Пробуем форк, где поддержка BE3600 более вероятна
-          git clone --depth 1 https://github.com/VIK_AD/immortalwrt.git source || git clone --depth 1 https://github.com/immortalwrt/immortalwrt.git source
-          cd source
-          ./scripts/feeds update -a
-          ./scripts/feeds install -a
+          # Клонируем форк, где поддержка BE3600 наиболее вероятна
+          git clone --depth 1 https://github.com/VIK_AD/immortalwrt.git source
 
-      - name: RECON (Разведка)
+      - name: Deep Search & Report
         run: |
           cd source
-          echo "Ищем упоминания Xiaomi BE3600..."
-          # Ищем по всем папкам без привязки к таргету
-          grep -Ril "be3600" target/linux/ | head -n 5 || echo "Опять не нашли"
+          {
+            echo "=== ГЛУБОКИЙ ПОИСК: BE3600 / RD15 / XIAOMI ==="
+            grep -RinE "be3600|rd15|xiaomi" target/linux/qualcommax/ 2>/dev/null || echo "В основном таргете совпадений нет"
+            
+            echo -e "\n=== СТРУКТУРА ТАРГЕТА IPQ50XX ==="
+            ls -R target/linux/qualcommax/image/ | grep "ipq50xx" || echo "Файлы не найдены"
+            
+            echo -e "\n=== ПОИСК В PROFILES.JSON ==="
+            find . -name profiles.json -exec grep -lE "be3600|rd15|xiaomi" {} + || echo "В индексах упоминаний нет"
+            
+            echo -e "\n=== ВСЕ ДОСТУПНЫЕ XIAOMI В ЭТОМ ТАРГЕТЕ ==="
+            grep -r "DEVICE_TITLE.*Xiaomi" target/linux/qualcommax/image/ || echo "Xiaomi не найдены"
+          } | tee ../audit-report.txt
 
-      - name: Generate Config
-        run: |
-          cd source
-          # Пытаемся завести конфиг через автоподбор
-          printf 'CONFIG_TARGET_qualcommax=y\nCONFIG_TARGET_qualcommax_ipq50xx=y\nCONFIG_TARGET_qualcommax_ipq50xx_DEVICE_xiaomi_be3600=y' > .config
-          make defconfig
-
-      - name: Build
-        run: |
-          cd source
-          make -j$(nproc) || make -j1 V=s
-
-      - name: Upload
+      - name: Upload Report
         uses: actions/upload-artifact@v4
         with:
-          name: Firmware-BE3600-Try2
-          path: source/bin/targets/*/*/*
+          name: BE3600-Audit-Report
+          path: audit-report.txt
           
