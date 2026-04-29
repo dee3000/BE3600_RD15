@@ -12,24 +12,22 @@ jobs:
 
       - name: Clone source
         run: |
-          # Клонируем форк, где поддержка BE3600 наиболее вероятна
-          git clone --depth 1 https://github.com/VIK_AD/immortalwrt.git source
+          # Используем основной репозиторий, он гарантированно доступен
+          git clone --depth 1 https://github.com/immortalwrt/immortalwrt.git source
 
       - name: Deep Search & Report
         run: |
           cd source
           {
             echo "=== ГЛУБОКИЙ ПОИСК: BE3600 / RD15 / XIAOMI ==="
-            grep -RinE "be3600|rd15|xiaomi" target/linux/qualcommax/ 2>/dev/null || echo "В основном таргете совпадений нет"
+            # Ищем по всему дереву, вдруг оно в другом таргете
+            grep -RinE "be3600|rd15|xiaomi" target/linux/ 2>/dev/null || echo "Совпадений в таргетах не найдено"
             
-            echo -e "\n=== СТРУКТУРА ТАРГЕТА IPQ50XX ==="
-            ls -R target/linux/qualcommax/image/ | grep "ipq50xx" || echo "Файлы не найдены"
+            echo -e "\n=== ПОИСК В ТАБЛИЦЕ ПРОФИЛЕЙ ==="
+            find target/linux/ -name profiles.json -exec grep -lE "be3600|rd15|xiaomi" {} + || echo "В profiles.json пусто"
             
-            echo -e "\n=== ПОИСК В PROFILES.JSON ==="
-            find . -name profiles.json -exec grep -lE "be3600|rd15|xiaomi" {} + || echo "В индексах упоминаний нет"
-            
-            echo -e "\n=== ВСЕ ДОСТУПНЫЕ XIAOMI В ЭТОМ ТАРГЕТЕ ==="
-            grep -r "DEVICE_TITLE.*Xiaomi" target/linux/qualcommax/image/ || echo "Xiaomi не найдены"
+            echo -e "\n=== ДОСТУПНЫЕ XIAOMI В QUALCOMMAX ==="
+            grep -r "DEVICE_TITLE.*Xiaomi" target/linux/qualcommax/image/ 2>/dev/null || echo "Xiaomi не найдены"
           } | tee ../audit-report.txt
 
       - name: Upload Report
@@ -37,4 +35,3 @@ jobs:
         with:
           name: BE3600-Audit-Report
           path: audit-report.txt
-          
