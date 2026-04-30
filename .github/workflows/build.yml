@@ -1,4 +1,4 @@
-name: DTS Inventory
+name: Repo Search
 
 on:
   workflow_dispatch:
@@ -14,12 +14,7 @@ jobs:
           ref: master
           path: immortalwrt
 
-      - name: List qualcommax DTS files
+      - name: Search whole repo
         run: |
-          echo "=== FILES IN target/linux/qualcommax/dts ==="
-          find immortalwrt/target/linux/qualcommax/dts -maxdepth 1 -type f | sort
-
-      - name: Show IPQ5332-related files
-        run: |
-          echo "=== IPQ5332 / XIAOMI / MI04 / BE3600 MATCHES ==="
-          grep -RInE "ipq5332|xiaomi|mi04|be3600|rd15" immortalwrt/target/linux/qualcommax/dts || true
+          echo "=== MATCHES FOR be3600 mi04 rd15 ipq5332 xiaomi ax3600 ax6000 ax9000 ==="
+          grep -RInE "be3600|mi04|rd15|ipq5332|xiaomi|ax3600|ax6000|ax9000" immortalwrt || true
