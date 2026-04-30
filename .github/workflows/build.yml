@@ -1,4 +1,4 @@
-name: Repo Search
+name: RD15-Hardware-Inventory
 
 on:
   workflow_dispatch:
@@ -8,13 +8,18 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout ImmortalWrt
-        uses: actions/checkout@v4
-        with:
-          repository: immortalwrt/immortalwrt
-          ref: master
-          path: immortalwrt
-
-      - name: Search whole repo
         run: |
-          echo "=== MATCHES FOR be3600 mi04 rd15 ipq5332 xiaomi ax3600 ax6000 ax9000 ==="
-          grep -RInE "be3600|mi04|rd15|ipq5332|xiaomi|ax3600|ax6000|ax9000" immortalwrt || true
+          git clone --depth 1 https://github.com/immortalwrt/immortalwrt.git source
+
+      - name: Scan Device Tree Sources (DTS)
+        run: |
+          cd source/target/linux/qualcommax/dts/
+          echo "=== СПИСОК ВСЕХ ФАЙЛОВ ДЛЯ IPQ53xx ==="
+          ls -1 ipq53* || echo "Файлы не найдены"
+          
+          echo -e "\n=== ПОИСК ПО КЛЮЧЕВЫМ МЕТКАМ (MI04.1 / BE3600 / RD15) ==="
+          grep -iE "mi04.1|be3600|rd15" *.dts* || echo "Прямых совпадений в официальном дереве нет"
+          
+          echo -e "\n=== ИЩЕМ ПОХОЖИЕ ШАБЛОНЫ (AP-MI) ==="
+          grep -l "qcom,ipq5332" *.dts* | xargs grep -l "ap-mi" || echo "Шаблоны не найдены"
+          
