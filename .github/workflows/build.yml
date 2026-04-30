@@ -1,28 +1,25 @@
-name: BE3600-Source-Targeted-Check
+name: DTS Inventory
 
 on:
   workflow_dispatch:
 
 jobs:
-  check_sources:
+  inventory:
     runs-on: ubuntu-22.04
     steps:
-      - name: Checkout
+      - name: Checkout ImmortalWrt
         uses: actions/checkout@v4
+        with:
+          repository: immortalwrt/immortalwrt
+          ref: master
+          path: immortalwrt
 
-      - name: Check Ais-S (Самый вероятный)
+      - name: List qualcommax DTS files
         run: |
-          git clone --depth 1 https://github.com/Ais-S/immortalwrt.git source_ais || echo "Ais-S не доступен"
-          if [ -d "source_ais" ]; then
-            echo "=== Файлы в Ais-S ==="
-            find source_ais/target/linux/qualcommax/ -name "*be3600*"
-          fi
+          echo "=== FILES IN target/linux/qualcommax/dts ==="
+          find immortalwrt/target/linux/qualcommax/dts -maxdepth 1 -type f | sort
 
-      - name: Check VIK-AD (Тот самый)
+      - name: Show IPQ5332-related files
         run: |
-          git clone --depth 1 https://github.com/VIK-AD/immortalwrt.git source_vik || echo "VIK-AD не доступен"
-          if [ -d "source_vik" ]; then
-            echo "=== Файлы в VIK-AD ==="
-            find source_vik/target/linux/qualcommax/ -name "*be3600*"
-          fi
-          
+          echo "=== IPQ5332 / XIAOMI / MI04 / BE3600 MATCHES ==="
+          grep -RInE "ipq5332|xiaomi|mi04|be3600|rd15" immortalwrt/target/linux/qualcommax/dts || true
